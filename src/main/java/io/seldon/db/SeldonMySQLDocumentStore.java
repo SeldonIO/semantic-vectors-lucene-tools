@@ -1,3 +1,24 @@
+/*
+ * Seldon -- open source prediction engine
+ * =======================================
+ * Copyright 2011-2015 Seldon Technologies Ltd and Rummble Ltd (http://www.seldon.io/)
+ *
+ **********************************************************************************************
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at       
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ********************************************************************************************** 
+*/
 package io.seldon.db;
 
 import io.seldon.util.CollectionUtils;
@@ -279,7 +300,7 @@ public class SeldonMySQLDocumentStore implements DocumentStore {
 			String attrNamesStr = CollectionUtils.join(attrNames,"\" , \"");
 			if (attrNamesStr.length() > 1)
 				attrNamesStr = "\"" + attrNamesStr + "\"";
-			PreparedStatement stmt = conn.prepareStatement("SELECT CASE WHEN imi.value IS NOT NULL THEN cast(imi.value as char) WHEN imd.value IS NOT NULL THEN cast(imd.value as char) WHEN imb.value IS NOT NULL THEN cast(imb.value as char) WHEN imboo.value IS NOT NULL THEN cast(imboo.value as char) WHEN imt.value IS NOT NULL THEN imt.value WHEN imdt.value IS NOT NULL THEN cast(imdt.value as char) WHEN imv.value IS NOT NULL THEN imv.value WHEN e.value_name IS NOT NULL THEN e.value_name END value_id FROM  items i INNER JOIN item_attr a ON i.item_id=? and a.name in ("+attrNamesStr+") and i.type=a.item_type LEFT JOIN item_map_int imi ON i.item_id=imi.item_id AND a.attr_id=imi.attr_id LEFT JOIN item_map_double imd ON i.item_id=imd.item_id AND a.attr_id=imd.attr_id LEFT JOIN item_map_enum ime ON i.item_id=ime.item_id AND a.attr_id=ime.attr_id LEFT JOIN item_map_bigint imb ON i.item_id=imb.item_id AND a.attr_id=imb.attr_id LEFT JOIN item_map_boolean imboo ON i.item_id=imboo.item_id AND a.attr_id=imboo.attr_id LEFT JOIN item_map_text imt ON i.item_id=imt.item_id AND a.attr_id=imt.attr_id LEFT JOIN item_map_datetime imdt ON i.item_id=imdt.item_id AND a.attr_id=imdt.attr_id LEFT JOIN item_map_varchar imv ON i.item_id=imv.item_id AND a.attr_id=imv.attr_id LEFT JOIN item_attr_enum e ON ime.attr_id =e.attr_id AND ime.value_id=e.value_id order by imv.pos");
+			PreparedStatement stmt = conn.prepareStatement("SELECT CASE WHEN imt.value IS NOT NULL THEN imt.value WHEN imv.value IS NOT NULL THEN imv.value END FROM  items i INNER JOIN item_attr a ON i.item_id=? and a.name in ("+attrNamesStr+") and i.type=a.item_type LEFT JOIN item_map_text imt ON i.item_id=imt.item_id AND a.attr_id=imt.attr_id LEFT JOIN item_map_varchar imv ON i.item_id=imv.item_id AND a.attr_id=imv.attr_id");
 			stmt.setLong(1, id);
 			ResultSet rs = stmt.executeQuery();
 			int count = 0;

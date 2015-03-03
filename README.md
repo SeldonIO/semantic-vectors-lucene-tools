@@ -25,8 +25,29 @@ There is also code to allow:
 
 At present the code is specific to a MySQL version of the Seldon database. Eventually, the code could be made more generally useful by allowing interfacing to a general datastore for meta data that is not Seldon specific.
 
+A cut down schema for the 4 tables needed is in schema-minimal.sql, this contains
+
+ * items : a table which provides ids and names to each document
+ * item_attr : a list of attributes for each document
+ * item_map_varchar : a table to hold varchar attributes (text < 256 characters)
+ * item_map_text : a table to hold large text attributes
+
 ## Example Use Case
-The "tag similarity" recommender in [Seldon's Movie Recommender Demo](http://www.seldon.io/movie-demo/) uses this project to create the Semantic Vectors database to allow movie similarity to be calculated.
+
+The examples folder has some simple examples. First build the project with Maven:
+
+```
+mvn -DskipTests=true clean package
+```
+
+Then go into the examples folder and run:
+
+ * ```./create_wiki_film_db.sh``` : this will download film abstracts from dbpedia and populate a mysql database. You will need to edit the mysql settings for your local setup.
+
+Then you can run:
+
+ * ```./create_basic_index.sh``` : this will create a lucene index from the film abstracts ; create semantic vectors dbs from this and run an example query.
+ * ```create_ner_index.sh``` : this will download openNLP models for Person name entity extract ; create a lucene index with names extracted and connected by underscore ; build semantic vectors dbs and run an example query.
 
 ## License
 
