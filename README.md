@@ -53,7 +53,7 @@ Then go into the examples folder and run:
 Then you can run:
 
  * ```./create_basic_index.sh``` : this will create a lucene index from the film abstracts ; create semantic vectors dbs from this and run an example query.
- * ```create_ner_index.sh``` : this will download openNLP models for Person name entity extract ; create a lucene index with names extracted and connected by underscore ; build semantic vectors dbs and run an example query.
+ * ```./create_ner_index.sh``` : this will download openNLP models for Person name entity extract ; create a lucene index with names extracted and connected by underscore ; build semantic vectors dbs and run an example query.
 
 ## License
 
