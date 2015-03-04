@@ -46,9 +46,11 @@ The examples have the following dependencies:
  * MySQL
  * csvtool
 
-Then go into the examples folder and run:
+Then go into the examples folder and edit ```common_vars.sh``` for your local MySQL database configuration.
 
- * ```./create_wiki_film_db.sh``` : this will download film abstracts from dbpedia and populate a mysql database. You will need to edit the mysql settings for your local setup. 
+Then run:
+
+ * ```./create_wiki_film_db.sh``` : this will download film abstracts from dbpedia and populate a mysql database. 
 
 Then you can run:
 
