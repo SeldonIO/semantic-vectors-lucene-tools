@@ -40,9 +40,15 @@ The examples folder has some simple examples. First build the project with Maven
 mvn -DskipTests=true clean package
 ```
 
+The examples have the following dependencies:
+
+ * Internet connection
+ * MySQL
+ * csvtool
+
 Then go into the examples folder and run:
 
- * ```./create_wiki_film_db.sh``` : this will download film abstracts from dbpedia and populate a mysql database. You will need to edit the mysql settings for your local setup.
+ * ```./create_wiki_film_db.sh``` : this will download film abstracts from dbpedia and populate a mysql database. You will need to edit the mysql settings for your local setup. 
 
 Then you can run:
 
