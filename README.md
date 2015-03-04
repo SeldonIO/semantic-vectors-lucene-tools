@@ -59,5 +59,9 @@ Then you can run:
 
 This project is licensed under the Apache 2 license. See LICENSE.txt. 
 
+## Seldon Prediction Engine
+
+Join our [Beta program](http://www.seldon.io/open-source) for the Seldon prediction engine.
+
 
 
