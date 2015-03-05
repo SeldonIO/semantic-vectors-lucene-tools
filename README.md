@@ -40,19 +40,13 @@ The examples folder has some simple examples. First build the project with Maven
 mvn -DskipTests=true clean package
 ```
 
-The examples have the following dependencies:
-
- * Internet connection
- * MySQL
- * csvtool
-
-Then go into the examples folder and edit ```common_vars.sh``` for your local MySQL database configuration.
+Go into the examples folder and edit ```common_vars.sh``` for your local MySQL database configuration.
 
 Then run:
 
  * ```./create_wiki_film_db.sh``` : this will download film abstracts from dbpedia and populate a mysql database. 
 
-Then you can run:
+You can now run:
 
  * ```./create_basic_index.sh``` : this will create a lucene index from the film abstracts ; create semantic vectors dbs from this and run an example query.
  * ```./create_ner_index.sh``` : this will download openNLP models for Person name entity extract ; create a lucene index with names extracted and connected by underscore ; build semantic vectors dbs and run an example query.
