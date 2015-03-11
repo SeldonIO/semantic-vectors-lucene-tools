@@ -1,3 +1,24 @@
+/*
+ * Seldon -- open source prediction engine
+ * =======================================
+ * Copyright 2011-2015 Seldon Technologies Ltd and Rummble Ltd (http://www.seldon.io/)
+ *
+ **********************************************************************************************
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at       
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ********************************************************************************************** 
+*/
 package io.seldon.semvec;
 
 
@@ -8,14 +29,12 @@ import io.seldon.nlp.TransliteratorPeer;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
-import java.util.Set;
 
 import net.htmlparser.jericho.Source;
 
@@ -112,6 +131,9 @@ public class CreateLuceneIndexFromDb {
 	@Argument(alias = "nlp-attr-ids", description = "attribute ids for data in item_map_varchar (deprecated)", required = false)
 	Integer[] nlpAttrIds;
 	
+	@Argument(alias = "filter-attr-enum", description = "filter by this attr_id:value_id from table item_map_enum", required = false)
+	String filterAttrEnumId;
+	
 	@Argument(alias = "extract-persons", description = "exteract people entities from text", required = false)
 	boolean extractPersons = false;
 	
@@ -130,6 +152,9 @@ public class CreateLuceneIndexFromDb {
 	@Argument(alias = "stop-words-file", description = "stop words file", required = false)
 	String stopWordsFile = null;
 	
+	@Argument(alias = "concepts-file", description = "concepts file", required = false)
+	String conceptsFile = null;
+	
 	@Argument(alias = "open-nlp-location", description = "location of open nlp files", required = false)
 	String nlpLocation = null;
 	
@@ -147,6 +172,9 @@ public class CreateLuceneIndexFromDb {
 	
 	@Argument(alias = "client-item-pattern", description = "item pattern to limit items", required = false)
 	String clientItemPattern = null;
+
+	@Argument(alias = "output-file", description = "output text to file for each document", required = false)
+	String outFile = null;
 	
 	private EXTRACTION_TYPE extractionMethod;
 	public static  enum EXTRACTION_TYPE {COMMENTS, ITEM_ATTR, USERS, USER_DIM, USER_ACTIONS; };
@@ -172,14 +200,16 @@ public class CreateLuceneIndexFromDb {
 			reader = new IndexSearcher(ireader);
 		}
 	    
-		BufferedWriter yahooWriter = null;
+		BufferedWriter fileWriter = null;
 		if (yahooLDAfile != null)
-			yahooWriter = new BufferedWriter(new FileWriter(yahooLDAfile));
-		updateComments(reader,writer,itemType,recreate,yahooWriter);
+			fileWriter = new BufferedWriter(new FileWriter(yahooLDAfile));
+		else if (outFile != null)
+			fileWriter = new BufferedWriter(new FileWriter(outFile));
+		updateComments(reader,writer,itemType,recreate,fileWriter);
 		
 		
-		if (yahooWriter != null)
-			yahooWriter.close();
+		if (fileWriter != null)
+			fileWriter.close();
 		if (ireader != null)
 			ireader.close();
 		writer.close();
@@ -213,7 +243,7 @@ public class CreateLuceneIndexFromDb {
 		}
 	}
 	
-	private void saveDocument(long id,IndexSearcher reader,IndexWriter writer,BufferedWriter yahooWriter) throws CorruptIndexException, IOException
+	private void saveDocument(long id,IndexSearcher reader,IndexWriter writer,BufferedWriter fileWriter) throws CorruptIndexException, IOException
 	{
 		String path;
 		if (rawIds)
@@ -311,14 +341,24 @@ public class CreateLuceneIndexFromDb {
 				else
 					writer.addDocument(createDoc(path,comments));
 			
-				if (yahooWriter != null)
+				if (fileWriter != null)
 				{
-					yahooWriter.write(""+id);
-					yahooWriter.write(" ");
-					yahooWriter.write(path);
-					yahooWriter.write(" ");
-					yahooWriter.write(comments);
-					yahooWriter.write("\n");
+					if (yahooLDAfile != null)
+					{
+						fileWriter.write(""+id);
+						fileWriter.write(" ");
+						fileWriter.write(path);
+						fileWriter.write(" ");
+						fileWriter.write(comments);
+						fileWriter.write("\n");
+					}
+					else
+					{
+						fileWriter.write(""+id);
+						fileWriter.write(",");
+						fileWriter.write(comments);
+						fileWriter.write("\n");						
+					}
 				}
 			}
 		}
@@ -336,7 +376,7 @@ public class CreateLuceneIndexFromDb {
 			ids = docStore.getLatestComments(itemType,deltaMins > 0 ? cal.getTime() : null);
 			break;
 		case ITEM_ATTR:
-			ids = docStore.getLatestItems(itemType,deltaMins > 0 ?  cal.getTime() : null,itemLimit,clientItemPattern,useItemMapDatetime);
+			ids = docStore.getLatestItems(itemType,deltaMins > 0 ?  cal.getTime() : null,itemLimit,clientItemPattern,useItemMapDatetime,filterAttrEnumId);
 			break;
 		case USERS:
 		case USER_ACTIONS:
@@ -396,11 +436,12 @@ public class CreateLuceneIndexFromDb {
 					extractOrganisations ? nlpLocation+"/en-ner-organization.bin" : null,
 					extractPlaces ? nlpLocation+"/en-ner-location.bin" : null,
 					useStopwords ? (stopWordsFile == null ? nlpLocation+"/stopwords.txt" : stopWordsFile) : null,
-					extractNouns ? nlpLocation+"/en-pos-maxent.bin" : null);
+					extractNouns ? nlpLocation+"/en-pos-maxent.bin" : null,
+					conceptsFile != null ? conceptsFile : null);
 		}
-		else if (useStopwords)
+		else if (useStopwords || conceptsFile != null)
 		{
-			addEntities = new AddEntities(stopWordsFile == null ? nlpLocation+"/stopwords.txt" : stopWordsFile);
+			addEntities = new AddEntities(stopWordsFile == null ? nlpLocation+"/stopwords.txt" : stopWordsFile,conceptsFile);
 		}
 
 		return true;

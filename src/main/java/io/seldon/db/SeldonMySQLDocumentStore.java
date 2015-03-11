@@ -84,7 +84,7 @@ public class SeldonMySQLDocumentStore implements DocumentStore {
 	 * Get item ids if a certain type from db
 	 */
 	
-	public ArrayList<Long> getLatestItems(int itemType, Date d,int limit,String clientItemPattern,boolean useItemMapDatetime) {
+	public ArrayList<Long> getLatestItems(int itemType, Date d,int limit,String clientItemPattern,boolean useItemMapDatetime,String filterAttrEnumId) {
 		System.out.println("GetLatestItems with itemType"+itemType+" limit "+limit+" useItemMapDatetime:"+useItemMapDatetime);
 		ArrayList<Long> ids = new ArrayList<Long>();
 		try
@@ -116,7 +116,13 @@ public class SeldonMySQLDocumentStore implements DocumentStore {
 			}
 			else
 			{
-				String sql = "select item_id from items where type=?";
+				String sql = "select items.item_id from items ";
+				if (filterAttrEnumId != null)
+				{
+					String[] parts = filterAttrEnumId.split(":");
+					sql = sql + " join item_map_enum on (items.item_id=item_map_enum.item_id and attr_id="+parts[0]+" and value_id="+parts[1]+") ";
+				}
+				sql = sql + "where type=?";
 				if (clientItemPattern != null)
 					sql = sql + " and client_item_id like \""+clientItemPattern+"\" ";
 				if (limit > 0)

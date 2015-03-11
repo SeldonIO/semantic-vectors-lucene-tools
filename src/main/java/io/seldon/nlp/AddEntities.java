@@ -1,3 +1,24 @@
+/*
+ * Seldon -- open source prediction engine
+ * =======================================
+ * Copyright 2011-2015 Seldon Technologies Ltd and Rummble Ltd (http://www.seldon.io/)
+ *
+ **********************************************************************************************
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at       
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ********************************************************************************************** 
+*/
 package io.seldon.nlp;
 
 import java.io.BufferedReader;
@@ -19,10 +40,14 @@ public class AddEntities {
 	boolean findLocations = false;
 	boolean useStopWords = false;
 	boolean extractNouns = false;
+	ConceptFinder conceptFinder = null;
 	
-	public AddEntities(String stopWords)
+	public AddEntities(String stopWords,String conceptsFile)
 	{
-		loadStopWords(stopWords);
+		if (stopWords != null)
+			loadStopWords(stopWords);
+		if (conceptsFile != null)
+			conceptFinder = new ConceptFinder(conceptsFile);
 	}
 	
 	public AddEntities(String sentModel,
@@ -31,7 +56,8 @@ public class AddEntities {
 			String organizationModel,
 			String locationModel,
 			String stopWords,
-			String posModel) throws FileNotFoundException {
+			String posModel,
+			String conceptsFile) throws FileNotFoundException {
 		nlp = new NLPUtils();
 		nlp.createSentenceDetector(sentModel);
 		nlp.createTokenizer(tokenModel);
@@ -60,7 +86,8 @@ public class AddEntities {
 			nlp.createTagger(posModel);
 			this.extractNouns = true;
 		}
-
+		if (conceptsFile != null)
+			conceptFinder = new ConceptFinder(conceptsFile);
 	}
 	
 	private void loadStopWords(String path)
@@ -102,6 +129,15 @@ public class AddEntities {
     	}
 	}
 	
+	private String[] simpleTokenize(String text)
+	{
+		StringBuffer p = new StringBuffer();
+		text = text.replaceAll("[\\?\\!,;\\.\\:]","").toLowerCase();
+		text = text.replaceAll("\\&\\#\\d\\d\\d", ""); // remove html codes
+		String[] parts = text.split("\\s+");
+		return parts;
+	}
+	
 	public String removeStopWords(String text)
 	{
 		StringBuffer p = new StringBuffer();
@@ -118,8 +154,25 @@ public class AddEntities {
 	{
 		if (nlp == null && stopWords != null)
 		{
-			System.out.println("INFO - removing stopwords... with simple tokenization");
-			return removeStopWords(text);
+			StringBuffer p = new StringBuffer();
+			String[] tokens = simpleTokenize(text);
+			if (conceptFinder != null)
+			{
+				System.out.println("INFO - find concepts");
+				String[] concepts = conceptFinder.find_concepts(tokens);
+				for (String concept : concepts)
+					p.append(" ").append(concept);
+			}
+			if (stopWords != null)
+			{
+				System.out.println("INFO - removing stopwords");
+				for(int i=0;i<tokens.length;i++)
+				{
+					if (!stopWords.contains(tokens[i].toLowerCase()))
+						p.append(" ").append(tokens[i]);
+				}
+			}
+			return p.toString().trim().toLowerCase();
 		}
 		else if (nlp != null)
 		{
@@ -129,6 +182,13 @@ public class AddEntities {
 			for(String s : sentences)
 			{
 				String[] tokens = nlp.findTokens(s);
+				
+				if (conceptFinder != null)
+				{
+					String[] concepts = conceptFinder.find_concepts(tokens);
+					for (String concept : concepts)
+						p.append(" ").append(concept);
+				}
 				
 				if (stopWords != null)
 				{
