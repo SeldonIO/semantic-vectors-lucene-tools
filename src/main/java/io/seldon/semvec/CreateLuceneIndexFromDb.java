@@ -106,6 +106,9 @@ public class CreateLuceneIndexFromDb {
 	
 	@Argument(alias = "delta-days",description = "delta days in past to get items", required = false)
 	Integer deltaDays = 0;
+	
+	@Argument(alias = "min-tokens",description = "minimum number of tokens in document for it to be added", required = false)
+	Integer minTokens = 0;
 
 	@Argument(alias = "use-item-map-datetime", description = "use date field in item_map_datetime db table", required = false)
 	boolean useItemMapDatetime = false;
@@ -324,7 +327,8 @@ public class CreateLuceneIndexFromDb {
 			}
 			comments = comments.replaceAll("\\|", "");
 			comments = comments.trim();
-			if (!"".equals(comments))
+			String[] tokens = comments.split(" ");
+			if (!"".equals(comments) && tokens.length >= minTokens)
 			{
 				if (debug)
 					System.out.println("adding document for id "+id+" with text:["+comments+"]");
@@ -361,6 +365,8 @@ public class CreateLuceneIndexFromDb {
 					}
 				}
 			}
+			else
+				System.out.println("Skipping document with id "+id+" of token length "+tokens.length);
 		}
 	}
 	

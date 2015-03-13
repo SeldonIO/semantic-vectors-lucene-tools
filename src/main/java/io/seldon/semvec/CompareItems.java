@@ -24,7 +24,9 @@ package io.seldon.semvec;
 import io.seldon.db.DocumentStore;
 import io.seldon.db.SeldonMySQLDocumentStore;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,6 +48,9 @@ public class CompareItems {
 	
 	@Argument(alias = "doc-vectors-file", description = "docvectors file", required = true)
 	private String docVectorsFile;
+	
+	@Argument(alias = "input-file", description = "input file containing ids to compare", required = false)
+	private String inputFile;
 	
 	@Argument(alias = "results-file", description = "results file", required = true)
 	private String resultsFile;
@@ -101,8 +106,20 @@ public class CompareItems {
 		BufferedWriter fileWriter = new BufferedWriter(new FileWriter(resultsFile));
 		
 		ArrayList<Long> ids = null;
-
-		ids = docStore.getLatestItems(itemType,null,itemLimit,null,false,filterAttrEnumId);
+		
+		if (inputFile != null)
+		{
+			BufferedReader filereader = new BufferedReader(new FileReader(inputFile));
+			ids = new ArrayList<Long>();
+			String line = null;
+			while((line = filereader.readLine()) != null)
+			{
+				ids.add(Long.parseLong(line));
+			}
+			filereader.close();
+		}
+		else
+			ids = docStore.getLatestItems(itemType,null,itemLimit,null,false,filterAttrEnumId);
 		
 		if (ids != null)
 		{
