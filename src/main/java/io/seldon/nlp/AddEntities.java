@@ -41,6 +41,7 @@ public class AddEntities {
 	boolean useStopWords = false;
 	boolean extractNouns = false;
 	ConceptFinder conceptFinder = null;
+	boolean filterNumbers = true;
 	
 	public AddEntities(String stopWords,String conceptsFile)
 	{
@@ -138,6 +139,20 @@ public class AddEntities {
 		return parts;
 	}
 	
+	private boolean isNumber(String token)
+	{
+		try 
+		{
+			Double.parseDouble( token );
+			return true;
+		} 
+		catch 
+		(Exception e) 
+		{
+			return false;
+		}
+	}
+	
 	public String removeStopWords(String text)
 	{
 		StringBuffer p = new StringBuffer();
@@ -158,17 +173,18 @@ public class AddEntities {
 			String[] tokens = simpleTokenize(text);
 			if (conceptFinder != null)
 			{
-				System.out.println("INFO - find concepts");
+				System.out.println("INFO - find concepts ignoring numbers");
 				String[] concepts = conceptFinder.find_concepts(tokens);
 				for (String concept : concepts)
-					p.append(" ").append(concept);
+					if (!isNumber(concept))
+						p.append(" ").append(concept);
 			}
 			if (stopWords != null)
 			{
-				System.out.println("INFO - removing stopwords");
+				System.out.println("INFO - removing stopwords and numbers");
 				for(int i=0;i<tokens.length;i++)
 				{
-					if (!stopWords.contains(tokens[i].toLowerCase()))
+					if (!isNumber(tokens[i]) && !stopWords.contains(tokens[i].toLowerCase()))
 						p.append(" ").append(tokens[i]);
 				}
 			}

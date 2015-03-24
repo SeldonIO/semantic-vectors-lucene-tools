@@ -161,7 +161,7 @@ public class CreateLuceneIndexFromDb {
 	@Argument(alias = "open-nlp-location", description = "location of open nlp files", required = false)
 	String nlpLocation = null;
 	
-	@Argument(description = "transliterate text to remove accents and punctuation", required = false)
+	@Argument(alias = "transliterate", description = "transliterate text to remove accents and punctuation", required = false)
 	boolean transLiterate = false;
 	
 	@Argument(alias = "sequential-ids", description = "ensure sequential ids in lucene", required = false)
@@ -246,6 +246,7 @@ public class CreateLuceneIndexFromDb {
 		}
 	}
 	
+	
 	private void saveDocument(long id,IndexSearcher reader,IndexWriter writer,BufferedWriter fileWriter) throws CorruptIndexException, IOException
 	{
 		String path;
@@ -308,6 +309,13 @@ public class CreateLuceneIndexFromDb {
 				}
 			}
 			
+			comments = comments.replaceAll("\\,|\\.|\\!|\\;|\\/", " ");
+			if (transLiterate)
+			{
+				System.out.println("removing punctuation");
+				comments = TransliteratorPeer.getPunctuationTransLiterator().transliterate(comments);
+			}
+			
 			if (addEntities != null && nlpComments == null)
 				comments = addEntities.process(comments);
 			else if (addEntities != null && nlpComments != null)
@@ -322,6 +330,7 @@ public class CreateLuceneIndexFromDb {
 				comments = comments.replaceAll("\\,|\\.|\\!|\\;|\\/", " ");
 				if (transLiterate)
 				{
+					System.out.println("removing punctuation");
 					comments = TransliteratorPeer.getPunctuationTransLiterator().transliterate(comments);
 				}
 			}
