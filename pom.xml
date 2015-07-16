@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.seldon</groupId>
   <artifactId>semvec-lucene-tools</artifactId>
-  <version>1.2</version>
+  <version>1.4</version>
   <name>Semantic Vector Lucene Tools</name>
   
   
